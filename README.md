@@ -1,5 +1,5 @@
 # Work-Tracker
-A lightweight, browser-based work hour tracker built for working students in Germany — where logging hours isn't optional, it's a legal requirement.
+A lightweight, browser-based work hour tracker built for working students in Germany where logging hours isn't optional, it's a legal requirement.
 
 Built entirely using **Claude Artifacts** and a structured five-part prompt engineering formula.
 
@@ -7,12 +7,12 @@ Built entirely using **Claude Artifacts** and a structured five-part prompt engi
 👉 [Try it here](https://neelbandiwadekar08-hub.github.io/Work-Tracker/)
 
 ## 💡 Why I Built This
-Manual hour logging is tedious, error-prone, and easy to forget. Instead of searching for a tool that fit my exact situation, I built one — no account, no cloud, no friction.
+Manual hour logging is tedious, error-prone, and easy to forget. Instead of searching for a tool that fit my exact situation, I built one, no account, no cloud, no friction.
 
 ## ✨ Features
 - ⏱️ One-tap clock in/out with live time capture
 - ☕ Break start and resume tracking
-- 📅 Interactive calendar with NRW public holidays
+- 📅 Interactive calendar with German public holidays
 - 📊 Weekly breakdowns, monthly progress, and overtime carry-forward
 - 💾 Browser-based storage — offline, private, no account needed
 - 📱 Fully responsive across mobile, tablet, and desktop
@@ -34,8 +34,8 @@ This app was built using **Claude Artifacts** with a five-part prompt engineerin
 - GitHub Pages (hosting)
 
 ## 📌 Key Takeaway
-Prompt engineering is not just about asking better questions — it is about thinking clearly enough to describe a problem well enough to solve it.
+Prompt engineering is not just about asking better questions, it is about thinking clearly enough to describe a problem well enough to solve it.
 
 ---
 
-*Built by [Neel Bandiwadekar](https://www.linkedin.com/in/) — Working Student | Science Communicator*
+*Built by [Neel Nagesh Bandiwadekar](https://www.linkedin.com/in/) — Working Student
