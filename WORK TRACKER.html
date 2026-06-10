@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Work Tracker 2026</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { background: #000; color: #fff; font-family: system-ui, "Helvetica Neue", sans-serif; }
+    input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #3a3a3c; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const WHR = 20, MTH = 80;
+const HOLIDAYS = {
+  "2026-04-03":"Good Friday","2026-04-06":"Easter Monday",
+  "2026-05-01":"Labour Day","2026-05-14":"Ascension Day","2026-05-25":"Whit Monday",
+  "2026-06-04":"Corpus Christi","2026-10-03":"German Unity Day",
+  "2026-11-01":"All Saints Day","2026-12-25":"Christmas Day","2026-12-26":"2nd Christmas",
+  "2027-01-01":"New Years Day","2027-03-26":"Good Friday","2027-03-29":"Easter Monday"
+};
+
+const fd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const toM = t => { if(!t) return 0; const [h,m]=t.split(":").map(Number); return h*60+(m||0); };
+const fmtN = n => n.toFixed(2).replace(".",",");
+const fmtH = n => n.toFixed(1).replace(".",",");
+const hm = h => { const H=Math.floor(Math.abs(h)),M=Math.round((Math.abs(h)-H)*60); return `${H}h ${String(M).padStart(2,"0")}m`; };
+const nowT = () => { const n=new Date(); return `${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`; };
+const isOff = ds => !!HOLIDAYS[ds];
+const isWknd = d => d.getDay()===0||d.getDay()===6;
+const isNonWork = d => isWknd(d)||isOff(fd(d));
+const calcW = e => {
+  if(!e||!e.clockIn||!e.workEnd) return 0;
+  const s=toM(e.clockIn),en=toM(e.workEnd); if(en<=s) return 0;
+  let w=en-s; if(e.breakStart&&e.breakEnd){const bd=toM(e.breakEnd)-toM(e.breakStart);if(bd>0)w-=bd;}
+  return Math.max(0,w/60);
+};
+const wkMon = d => { const x=new Date(d); x.setHours(0,0,0,0); const dow=x.getDay(); x.setDate(x.getDate()-(dow===0?6:dow-1)); return fd(x); };
+const MONTHS = Array.from({length:13},(_,i)=>{ const d=new Date(2026,3+i,1); return {year:d.getFullYear(),month:d.getMonth()}; });
+
+// localStorage persistence
+const lsGet = ds => { try { const v=localStorage.getItem("wt:"+ds); return v?JSON.parse(v):null; } catch { return null; } };
+const lsSet = (ds,e) => { try { localStorage.setItem("wt:"+ds, JSON.stringify(e)); } catch {} };
+const lsAll = () => {
+  const entries = {};
+  try {
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith("wt:")){
+        const v=localStorage.getItem(k);
+        if(v) entries[k.replace("wt:","")] = JSON.parse(v);
+      }
+    }
+  } catch {}
+  return entries;
+};
+
+const useWidth = () => {
+  const [w, setW] = useState(window.innerWidth);
+  useEffect(() => { const h = () => setW(window.innerWidth); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
+  return w;
+};
+
+function App() {
+  const [tick,  setTick]  = useState(new Date());
+  const [mIdx,  setMIdx]  = useState(0);
+  const [sel,   setSel]   = useState(null);
+  const [draft, setDraft] = useState({});
+  const [saved, setSaved] = useState({});
+  const [tab,   setTab]   = useState("calendar");
+  const vw = useWidth();
+  const isMobile = vw < 768;
+  const isTablet = vw >= 768 && vw < 1100;
+
+  useEffect(()=>{ const id=setInterval(()=>setTick(new Date()),1000); return()=>clearInterval(id); },[]);
+  useEffect(()=>{
+    const t=new Date();
+    const idx=MONTHS.findIndex(m=>m.year===t.getFullYear()&&m.month===t.getMonth());
+    if(idx>=0){ setMIdx(idx); setSel(fd(t)); }
+    setSaved(lsAll());
+  },[]);
+
+  const {year,month}=MONTHS[mIdx];
+  const today=fd(new Date());
+  const mLabel=new Date(year,month,1).toLocaleString("en-GB",{month:"long",year:"numeric"});
+
+  const calDays=useMemo(()=>{
+    const arr=[],first=new Date(year,month,1);
+    let dow=first.getDay(); dow=dow===0?6:dow-1;
+    for(let i=0;i<dow;i++)arr.push(null);
+    const last=new Date(year,month+1,0);
+    for(let d=1;d<=last.getDate();d++)arr.push(new Date(year,month,d));
+    return arr;
+  },[year,month]);
+
+  const wdList=useMemo(()=>{
+    const arr=[],d=new Date(year,month,1);
+    while(d.getMonth()===month){if(!isNonWork(d))arr.push(fd(new Date(d)));d.setDate(d.getDate()+1);}
+    return arr;
+  },[year,month]);
+
+  const getE = ds => draft[ds]||saved[ds]||{};
+  const recF = (ds,f) => setDraft(p=>({...p,[ds]:{...getE(ds),[f]:nowT()}}));
+  const setF  = (ds,f,v) => setDraft(p=>({...p,[ds]:{...getE(ds),[f]:v}}));
+  const saveDay = ds => {
+    const e={...getE(ds),saved:true}; lsSet(ds,e);
+    setSaved(p=>({...p,[ds]:e}));
+    setDraft(p=>{const n={...p};delete n[ds];return n;});
+  };
+
+  const wkKeys=useMemo(()=>[...new Set(wdList.map(ds=>wkMon(new Date(ds))))],[wdList]);
+  const allMonthsUpTo=useMemo(()=>MONTHS.map(({year:y,month:mo})=>{
+    const wd=[],d=new Date(y,mo,1);
+    while(d.getMonth()===mo){if(!isNonWork(d))wd.push(fd(new Date(d)));d.setDate(d.getDate()+1);}
+    return wd;
+  }),[]);
+
+  const carryIntoMonth=useMemo(()=>{
+    let carry=0;
+    for(let mi=0;mi<mIdx;mi++){
+      const wd=allMonthsUpTo[mi];
+      const wks=[...new Set(wd.map(ds=>wkMon(new Date(ds))))];
+      wks.forEach(k=>{
+        const days=wd.filter(ds=>wkMon(new Date(ds))===k);
+        const w=days.reduce((s,ds)=>{const e=getE(ds);return s+(e.saved?calcW(e):0);},0);
+        const eff=Math.max(0,WHR-carry); carry=Math.max(0,w-eff);
+      });
+    }
+    return carry;
+  },[mIdx,saved,draft]);
+
+  const wkStats=useMemo(()=>{
+    let carry=carryIntoMonth;
+    return wkKeys.map((k,i)=>{
+      const days=wdList.filter(ds=>wkMon(new Date(ds))===k);
+      const w=days.reduce((s,ds)=>{const e=getE(ds);return s+(e.saved?calcW(e):0);},0);
+      const eff=Math.max(0,WHR-carry),ot=Math.max(0,w-eff),carryIn=carry;
+      carry=ot;
+      return{k,days,w,eff,ot,carryIn,isFirst:i===0};
+    });
+  },[wkKeys,wdList,saved,draft,carryIntoMonth]);
+
+  const mW=wdList.reduce((s,ds)=>{const e=getE(ds);return s+(e.saved?calcW(e):0);},0);
+  const mEff=Math.max(0,MTH-carryIntoMonth);
+  const mR=Math.max(0,mEff-mW);
+  const pct=Math.min(100,(mW/Math.max(mEff,0.001))*100);
+  const selDate=sel?new Date(sel+"T12:00:00"):null;
+  const selIsOff=sel?(isWknd(selDate)||isOff(sel)):false;
+  const e=getE(sel), selW=calcW(e);
+
+  const FIELDS=[
+    {f:"clockIn",   l:"Start",      b:"Clock In",  c:"#30d158",tc:"#000"},
+    {f:"breakStart",l:"Break Start",b:"Break",     c:"#ff9f0a",tc:"#000"},
+    {f:"breakEnd",  l:"Break End",  b:"Resume",    c:"#ff9f0a",tc:"#000"},
+    {f:"workEnd",   l:"End",        b:"Clock Out", c:"#ff453a",tc:"#fff"},
+  ];
+
+  const card = {background:"#1c1c1e",borderRadius:14};
+  const px = isMobile ? 12 : 20;
+
+  const CalendarBlock = () => (
+    <div style={{...card,padding:"12px 8px 10px"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 6px 10px"}}>
+        <button onClick={()=>setMIdx(i=>Math.max(0,i-1))} disabled={mIdx===0}
+          style={{width:32,height:32,borderRadius:"50%",background:"#2c2c2e",border:"none",color:mIdx===0?"#3a3a3c":"#fff",fontSize:18,cursor:mIdx===0?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontSize:16,fontWeight:700}}>{mLabel}</div>
+          <div style={{fontSize:11,color:"#8e8e93"}}>{wdList.length} working days · {MTH}h target</div>
+          {carryIntoMonth>0&&<div style={{fontSize:10,color:"#30d158",fontWeight:600}}>+{fmtN(carryIntoMonth)}h OT carried forward</div>}
+        </div>
+        <button onClick={()=>setMIdx(i=>Math.min(12,i+1))} disabled={mIdx===12}
+          style={{width:32,height:32,borderRadius:"50%",background:"#2c2c2e",border:"none",color:mIdx===12?"#3a3a3c":"#fff",fontSize:18,cursor:mIdx===12?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:4}}>
+        {["Mo","Tu","We","Th","Fr","Sa","Su"].map((d,i)=>(
+          <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:600,color:i>=5?"#3a3a3c":"#636366",letterSpacing:0.5}}>{d}</div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+        {calDays.map((day,i)=>{
+          if(!day) return <div key={i}/>;
+          const ds=fd(day),off=isNonWork(day),holiday=isOff(ds);
+          const isT=ds===today,isSel=ds===sel;
+          const de=getE(ds),dot=de.saved?"#30d158":draft[ds]?"#ff9f0a":null;
+          const wkh=de.saved?calcW(de):0;
+          return(
+            <div key={i} onClick={()=>{ if(!off){ setSel(ds); if(isMobile) setTab("log"); }}}
+              style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"3px 0",cursor:off?"default":"pointer",opacity:isWknd(day)?0.15:holiday?0.35:1}}>
+              <div style={{width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:isSel||isT?700:400,background:isSel?"#0a84ff":isT?"rgba(10,132,255,0.2)":"transparent",color:isSel?"#fff":isT?"#0a84ff":holiday?"#ff453a":"#fff",outline:isT&&!isSel?"1.5px solid #0a84ff":"none",outlineOffset:-1}}>
+                {day.getDate()}
+              </div>
+              {holiday&&!isWknd(day)?<div style={{fontSize:6,color:"#ff453a",fontWeight:700,marginTop:1}}>PH</div>
+                :dot?<div style={{width:4,height:4,borderRadius:"50%",background:dot,marginTop:2}}/>
+                :<div style={{width:4,height:4,marginTop:2}}/>}
+              {wkh>0&&<div style={{fontSize:8,color:"#30d158",fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtH(wkh)}</div>}
+            </div>
+          );
+        })}
+      </div>
+      {calDays.filter(Boolean).some(d=>isOff(fd(d))&&!isWknd(d))&&(
+        <div style={{borderTop:"1px solid #2c2c2e",marginTop:8,paddingTop:8,paddingLeft:6,paddingRight:6}}>
+          {calDays.filter(Boolean).filter(d=>isOff(fd(d))&&!isWknd(d)).map(d=>{
+            const ds=fd(d);
+            return(<div key={ds} style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#ff453a",padding:"2px 0"}}>
+              <span>{d.toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short"})}</span>
+              <span style={{color:"#636366"}}>{HOLIDAYS[ds]}</span>
+            </div>);
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  const DayEditorBlock = () => (
+    <>
+      {sel&&selDate&&!selIsOff&&(
+        <div style={{...card,overflow:"hidden",marginTop:12}}>
+          <div style={{padding:"14px 16px 12px",borderBottom:"1px solid #2c2c2e",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:17,fontWeight:700}}>{selDate.toLocaleDateString("en-GB",{weekday:"long"})}</div>
+              <div style={{fontSize:12,color:"#8e8e93",marginTop:2}}>{selDate.toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})}</div>
+            </div>
+            {selW>0?(
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:30,fontWeight:700,color:"#30d158",fontVariantNumeric:"tabular-nums",lineHeight:1}}>{fmtN(selW)}</div>
+                <div style={{fontSize:10,color:"#8e8e93",letterSpacing:1}}>HOURS · {hm(selW)}</div>
+              </div>
+            ):<div style={{fontSize:12,color:"#3a3a3c"}}>No entry yet</div>}
+          </div>
+          <div style={{padding:"12px 16px 6px"}}>
+            {FIELDS.map(({f,l,b,c,tc})=>(
+              <div key={f} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <div style={{width:72,fontSize:11,color:"#8e8e93",fontWeight:500,flexShrink:0}}>{l}</div>
+                <input type="time" value={e[f]||""} onChange={ev=>setF(sel,f,ev.target.value)}
+                  style={{flex:1,background:"#2c2c2e",border:"none",borderRadius:10,padding:"10px 8px",color:"#fff",fontSize:14,fontVariantNumeric:"tabular-nums",colorScheme:"dark",outline:"none",minWidth:0}}/>
+                <button onClick={()=>recF(sel,f)} style={{background:c,border:"none",borderRadius:10,padding:"10px 10px",color:tc,fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{b}</button>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:"4px 16px 16px"}}>
+            <button onClick={()=>saveDay(sel)} style={{width:"100%",border:"none",borderRadius:12,padding:14,fontSize:15,fontWeight:600,cursor:"pointer",background:e.saved?"rgba(48,209,88,0.12)":"#0a84ff",color:e.saved?"#30d158":"#fff",outline:e.saved?"1px solid #30d158":"none"}}>
+              {e.saved?"✓ Saved — Tap to Update":"Save Day"}
+            </button>
+          </div>
+        </div>
+      )}
+      {sel&&selDate&&selIsOff&&(
+        <div style={{...card,padding:20,textAlign:"center",marginTop:12}}>
+          <div style={{fontSize:28,marginBottom:8}}>{isWknd(selDate)?"🌙":"🇩🇪"}</div>
+          <div style={{fontWeight:600,fontSize:15}}>{isWknd(selDate)?"Weekend":"Public Holiday"}</div>
+          <div style={{fontSize:12,color:isWknd(selDate)?"#8e8e93":"#ff453a",marginTop:4}}>
+            {isWknd(selDate)?"Select a weekday to log hours":(HOLIDAYS[sel]||"National Holiday")}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const StatsBlock = () => (
+    <>
+      <div style={{...card,padding:14,marginBottom:12}}>
+        <div style={{fontSize:11,color:"#636366",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Monthly Overview</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+          {[
+            {l:"Hours Worked",  v:fmtN(mW)+"h",  s:hm(mW),  c:"#30d158"},
+            {l:"Target",        v:fmtN(mEff)+"h", s:carryIntoMonth>0?`${fmtN(carryIntoMonth)}h carried`:"", c:"#fff"},
+            {l:"Still Needed",  v:mR>0?fmtN(mR)+"h":"Done ✓", s:mR>0?hm(mR):"", c:mR===0?"#30d158":"#ff9f0a"},
+            {l:"Completion",    v:pct.toFixed(1).replace(".",",")+"%", s:`${fmtN(mW)}h of ${fmtN(mEff)}h`, c:"#0a84ff"},
+          ].map((st,i)=>(
+            <div key={i} style={{background:"#2c2c2e",borderRadius:10,padding:12}}>
+              <div style={{fontSize:9,color:"#636366",fontWeight:600,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{st.l}</div>
+              <div style={{fontSize:20,fontWeight:700,color:st.c,fontVariantNumeric:"tabular-nums"}}>{st.v}</div>
+              {st.s&&<div style={{fontSize:10,color:"#636366",marginTop:2}}>{st.s}</div>}
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:12,color:"#8e8e93"}}>
+          <span>Progress</span>
+          <span style={{fontWeight:700,color:pct>=100?"#30d158":"#0a84ff"}}>{pct.toFixed(1).replace(".",",")}%</span>
+        </div>
+        <div style={{height:6,background:"#2c2c2e",borderRadius:3,overflow:"hidden",marginBottom:8}}>
+          <div style={{width:pct+"%",height:"100%",background:pct>=100?"#30d158":"#0a84ff",borderRadius:3,transition:"width 0.4s"}}/>
+        </div>
+        <div style={{fontSize:13,color:"#e5e5ea"}}>
+          {mR>0?<span>Need <span style={{color:"#ff9f0a",fontWeight:600}}>{hm(mR)}</span> more</span>
+            :mW>0?<span style={{color:"#30d158",fontWeight:600}}>Monthly target reached! 🎉</span>
+            :<span style={{color:"#636366"}}>Select a weekday to start logging.</span>}
+        </div>
+      </div>
+
+      <div style={{fontSize:11,color:"#636366",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8,paddingLeft:2}}>Weekly Breakdown</div>
+      {wkStats.map((ws,i)=>{
+        const first=new Date(ws.days[0]+"T12:00:00"),lastD=new Date(ws.days[ws.days.length-1]+"T12:00:00");
+        const wPct=ws.eff>0?Math.min(100,(ws.w/ws.eff)*100):100;
+        return(
+          <div key={ws.k} style={{...card,padding:"14px 14px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14}}>Week {i+1}
+                  <span style={{fontWeight:400,fontSize:11,color:"#8e8e93",marginLeft:8}}>
+                    {first.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})} – {lastD.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}
+                  </span>
+                </div>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:5}}>
+                  {ws.carryIn>0&&ws.isFirst&&<span style={{fontSize:9,color:"#30d158",background:"rgba(48,209,88,0.1)",padding:"2px 7px",borderRadius:6}}>{fmtN(ws.carryIn)}h from prev</span>}
+                  {ws.carryIn>0&&!ws.isFirst&&<span style={{fontSize:9,color:"#30d158",background:"rgba(48,209,88,0.1)",padding:"2px 7px",borderRadius:6}}>{fmtN(ws.carryIn)}h carried in</span>}
+                  {ws.ot>0&&<span style={{fontSize:9,color:"#ff9f0a",background:"rgba(255,159,10,0.1)",padding:"2px 7px",borderRadius:6}}>+{fmtN(ws.ot)}h OT</span>}
+                </div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:22,fontWeight:700,color:ws.ot>0?"#ff9f0a":ws.w>0?"#30d158":"#8e8e93",fontVariantNumeric:"tabular-nums"}}>{fmtN(ws.w)}h</div>
+                <div style={{fontSize:11,color:"#636366"}}>of {fmtN(ws.eff)}h</div>
+              </div>
+            </div>
+            <div style={{height:4,background:"#2c2c2e",borderRadius:3,overflow:"hidden",marginBottom:8}}>
+              <div style={{width:wPct+"%",height:"100%",background:ws.ot>0?"#ff9f0a":"#30d158",borderRadius:3}}/>
+            </div>
+            <div style={{display:"flex",gap:5}}>
+              {ws.days.map(ds=>{
+                const de=getE(ds),wh=de.saved?calcW(de):0;
+                const dd=new Date(ds+"T12:00:00"),isSel=ds===sel;
+                return(
+                  <div key={ds} onClick={()=>{setSel(ds);const idx=MONTHS.findIndex(m=>m.year===dd.getFullYear()&&m.month===dd.getMonth());if(idx>=0)setMIdx(idx);if(isMobile)setTab("log");}}
+                    style={{flex:1,cursor:"pointer",textAlign:"center",background:isSel?"rgba(10,132,255,0.15)":"#2c2c2e",borderRadius:8,padding:"7px 2px",border:isSel?"1px solid #0a84ff":"1px solid transparent"}}>
+                    <div style={{fontSize:9,color:"#636366",fontWeight:600,textTransform:"uppercase"}}>{dd.toLocaleDateString("en-GB",{weekday:"short"})}</div>
+                    <div style={{fontSize:10,color:"#8e8e93"}}>{dd.getDate()}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:wh>0?"#30d158":"#3a3a3c",marginTop:2,fontVariantNumeric:"tabular-nums"}}>{wh>0?fmtN(wh):"—"}</div>
+                    {wh>0&&<div style={{fontSize:8,color:"#636366"}}>{hm(wh)}</div>}
+                    {de.clockIn&&<div style={{fontSize:8,color:"#48484a",marginTop:1}}>{de.clockIn}</div>}
+                    {de.workEnd&&<div style={{fontSize:8,color:"#48484a"}}>{de.workEnd}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+
+  const Header = () => (
+    <div style={{padding:`14px ${px}px`,borderBottom:"1px solid #1c1c1e",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+      <div>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:3,color:"#636366",textTransform:"uppercase"}}>Work Tracker 2026</div>
+        <div style={{fontSize:isMobile?36:44,fontWeight:200,letterSpacing:-2,fontVariantNumeric:"tabular-nums",lineHeight:1.1}}>
+          {tick.toLocaleTimeString("en-GB")}
+        </div>
+      </div>
+      <div style={{textAlign:"right"}}>
+        <div style={{fontSize:isMobile?14:18,fontWeight:600}}>{(sel?new Date(sel+"T12:00:00"):tick).toLocaleDateString("en-GB",{weekday:"long"})}</div>
+        <div style={{fontSize:isMobile?11:13,color:"#8e8e93",marginTop:2}}>{(sel?new Date(sel+"T12:00:00"):tick).toLocaleDateString("en-GB",{day:"2-digit",month:"long",year:"numeric"})}</div>
+      </div>
+    </div>
+  );
+
+  const TabBar = () => (
+    <div style={{display:"flex",borderTop:"1px solid #2c2c2e",flexShrink:0,background:"#000"}}>
+      {[{id:"calendar",label:"📅 Calendar"},{id:"log",label:"✏️ Log Day"},{id:"stats",label:"📊 Stats"}].map(t=>(
+        <button key={t.id} onClick={()=>setTab(t.id)}
+          style={{flex:1,padding:"12px 0",background:"none",border:"none",color:tab===t.id?"#0a84ff":"#636366",fontSize:12,fontWeight:tab===t.id?700:400,cursor:"pointer",borderTop:tab===t.id?"2px solid #0a84ff":"2px solid transparent"}}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if(isMobile) return (
+    <div style={{background:"#000",height:"100vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {Header()}
+      <div style={{flex:1,overflowY:"auto",padding:`12px ${px}px`}}>
+        {tab==="calendar"&&CalendarBlock()}
+        {tab==="log"&&DayEditorBlock()}
+        {tab==="stats"&&StatsBlock()}
+      </div>
+      {TabBar()}
+    </div>
+  );
+
+  if(isTablet) return (
+    <div style={{background:"#000",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+      {Header()}
+      <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+        <div style={{width:"45%",borderRight:"1px solid #2c2c2e",overflowY:"auto",padding:"16px 16px"}}>
+          {CalendarBlock()}
+          {DayEditorBlock()}
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"16px 16px"}}>
+          {StatsBlock()}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{background:"#000",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+      {Header()}
+      <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+        <div style={{width:360,flexShrink:0,borderRight:"1px solid #2c2c2e",overflowY:"auto",padding:"18px 18px"}}>
+          {CalendarBlock()}
+        </div>
+        <div style={{width:340,flexShrink:0,borderRight:"1px solid #2c2c2e",overflowY:"auto",padding:"18px 16px"}}>
+          {DayEditorBlock()}
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"18px 20px"}}>
+          {StatsBlock()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+</body>
+</html>
