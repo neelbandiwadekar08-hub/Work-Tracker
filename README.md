@@ -44,27 +44,19 @@ So I built my own. No login. No internet needed. No setup.
 
 ## 🧠 How I Built It
 
-I built this entire app using **Claude Artifacts** 
+I built this entire app using **Claude Artifacts** and I used a five-part formula to describe exactly what I wanted:
 
-I used a five-part formula to describe exactly what I wanted:
 
-```
-**Role**
-This is where you tell the AI what kind of expert it should think like before it starts working. Think of it as assigning the AI a hat or a lens so it sees your problem from exactly the right perspective, and the quality of the output immediately improves because of it.
+Role: This is where you tell the AI what kind of expert it should think like before it starts working. Think of it as assigning the AI a hat or a lens so it sees your problem from exactly the right perspective, and the quality of the output immediately improves because of it.
 
-**Task**
-This is the one specific job you want the AI to do. Keeping it to a single task means the AI stays focused and does not mix up multiple things at once.
+Task: This is the one specific job you want the AI to do. Keeping it to a single task means the AI stays focused and does not mix up multiple things at once.
 
-**Context**
-This is the why behind your request, who it is for, what situation it solves, and why it matters. Without context, the AI builds something technically correct but completely disconnected from your real world need.
+Context: This is the why behind your request, who it is for, what situation it solves, and why it matters. Without context, the AI builds something technically correct but completely disconnected from your real world need.
 
-**Data**
-This is where you hand the AI the specific facts, numbers, or details it needs to build something accurate. The more precise your data, the more realistic and usable the output becomes.
+Data: This is where you hand the AI the specific facts, numbers, or details it needs to build something accurate. The more precise your data, the more realistic and usable the output becomes.
 
-**Restrictions**
-This is where you tell the AI what to avoid, what to keep simple, and what boundaries it must not cross. For this project, restrictions included using the European number format, keeping all calculations in hours and hours format, and making sure no output crossed into unnecessary complexity.
+Restrictions: This is where you tell the AI what to avoid, what to keep simple, and what boundaries it must not cross. For this project, restrictions included using the European number format, keeping all calculations in hours and hours format, and making sure no output crossed into unnecessary complexity.
 
-```
 
 > The real skill is not knowing how to code.
 > It is knowing how to describe your problem clearly enough that the solution builds itself.
