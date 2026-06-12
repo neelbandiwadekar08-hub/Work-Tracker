@@ -19,14 +19,13 @@ In Germany, working students are legally required to log their working hours. Mo
 
 So I built my own. No login. No internet needed. No setup.
 
-**Work Tracker** lets you clock in, clock out, track breaks, and see your weekly and monthly hours — all from a single page that opens straight in your browser.
+**Work Tracker** lets you clock in, clock out, track breaks, and see your weekly and monthly hours, all from a single page that opens straight in your browser.
 
 ---
 
 ## 🚀 Try It Live
 
 | Link | What it is |
-|---|---|
 | 👉 [Open the App](https://neelbandiwadekar08-hub.github.io/Work-Tracker/) 
 | 🧪 [Original Claude Artifact](https://claude.ai/public/artifacts/81428f5c-9236-4910-8a9d-f618e24c0333) 
 
@@ -36,11 +35,11 @@ So I built my own. No login. No internet needed. No setup.
 
 | Feature | What it means |
 |---|---|
-| ⏱️ **Clock In / Clock Out** | Tap once to start, tap once to stop — your time is saved automatically |
+| ⏱️ **Clock In / Clock Out** | Tap once to start, tap once to stop, your time is saved automatically |
 | ☕ **Break Tracking** | Pause your session for a break and pick up right where you left off |
 | 📊 **Weekly & Monthly Summary** | See your total hours per week and month, including any extra hours worked |
-| 💾 **Works Offline** | Your data is saved on your own device — nothing goes to the internet |
-| 📱 **Works on Any Screen** | Phone, tablet, or computer — it adjusts automatically |
+| 💾 **Works Offline** | Your data is saved on your own device, nothing goes to the internet |
+| 📱 **Works on Any Screen** | Phone, tablet, or computer, it adjusts automatically |
 
 ---
 
@@ -51,11 +50,21 @@ I built this entire app using **Claude Artifacts**
 I used a five-part formula to describe exactly what I wanted:
 
 ```
-Role         → Tell the AI what kind of expert it should act as
-Task         → Give it one clear job to do
-Context      → Explain why you need it and who it is for
-Data         → Share the specific details it needs to know
-Restrictions → Tell it what to avoid or keep simple
+Role
+
+This is where you tell the AI what kind of expert it should think like before it starts working. Think of it as assigning the AI a hat or a lens so it sees your problem from exactly the right perspective, and the quality of the output immediately improves because of it.
+Task
+
+This is the one specific job you want the AI to do. Keeping it to a single task means the AI stays focused and does not mix up multiple things at once.
+Context
+
+This is the why behind your request, who it is for, what situation it solves, and why it matters. Without context, the AI builds something technically correct but completely disconnected from your real world need.
+Data
+
+This is where you hand the AI the specific facts, numbers, or details it needs to build something accurate. The more precise your data, the more realistic and usable the output becomes.
+Restrictions
+
+This is where you tell the AI what to avoid, what to keep simple, and what boundaries it must not cross. For this project, restrictions included using the European number format, keeping all calculations in hours and hours format, and making sure no output crossed into unnecessary complexity.
 ```
 
 This approach gets you a working result on the first try — instead of going back and forth fixing vague output.
