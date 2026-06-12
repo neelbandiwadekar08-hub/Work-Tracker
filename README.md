@@ -25,7 +25,6 @@ So I built my own. No login. No internet needed. No setup.
 
 ## 🚀 Try It Live
 
-| Link | What it is |
 | 👉 [Open the App](https://neelbandiwadekar08-hub.github.io/Work-Tracker/) 
 | 🧪 [Original Claude Artifact](https://claude.ai/public/artifacts/81428f5c-9236-4910-8a9d-f618e24c0333) 
 
@@ -50,24 +49,22 @@ I built this entire app using **Claude Artifacts**
 I used a five-part formula to describe exactly what I wanted:
 
 ```
-Role
-
+**Role**
 This is where you tell the AI what kind of expert it should think like before it starts working. Think of it as assigning the AI a hat or a lens so it sees your problem from exactly the right perspective, and the quality of the output immediately improves because of it.
-Task
 
+**Task**
 This is the one specific job you want the AI to do. Keeping it to a single task means the AI stays focused and does not mix up multiple things at once.
-Context
 
+**Context**
 This is the why behind your request, who it is for, what situation it solves, and why it matters. Without context, the AI builds something technically correct but completely disconnected from your real world need.
-Data
 
+**Data**
 This is where you hand the AI the specific facts, numbers, or details it needs to build something accurate. The more precise your data, the more realistic and usable the output becomes.
-Restrictions
 
+**Restrictions**
 This is where you tell the AI what to avoid, what to keep simple, and what boundaries it must not cross. For this project, restrictions included using the European number format, keeping all calculations in hours and hours format, and making sure no output crossed into unnecessary complexity.
-```
 
-This approach gets you a working result on the first try — instead of going back and forth fixing vague output.
+```
 
 > The real skill is not knowing how to code.
 > It is knowing how to describe your problem clearly enough that the solution builds itself.
@@ -78,18 +75,9 @@ This approach gets you a working result on the first try — instead of going ba
 
 - HTML, CSS, and JavaScript
 - Claude Artifacts by Anthropic
-- GitHub Pages — turns this repo into a live app for free
+- GitHub Pages
 
 ---
-
-## 📂 What Is in This Repo
-
-```
-Work-Tracker/
-│
-├── index.html    ← The entire app lives in this one file
-└── README.md     ← You are reading this right now
-```
 
 
 ## 🤔 Why I Built This
@@ -108,7 +96,6 @@ I could not find exactly what I needed, so I built it myself using AI as my deve
 
 - How to describe a problem clearly enough for AI to solve it
 - How a browser can save your data on your device without needing a server
-- How a single file can be a complete, working application
 - How to publish anything online for free using GitHub Pages
 
 ---
@@ -125,7 +112,7 @@ Working Student | Builder
 
 ## ⭐ Found This Useful?
 
-Give it a star — it helps other people find it too.
+Give it a star, it helps other people find it too.
 
 [![Star this repo](https://img.shields.io/github/stars/neelbandiwadekar08-hub/Work-Tracker?style=social)](https://github.com/neelbandiwadekar08-hub/Work-Tracker)
 
