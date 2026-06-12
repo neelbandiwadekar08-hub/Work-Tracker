@@ -119,5 +119,5 @@ Give it a star, it helps other people find it too.
 ---
 
 <div align="center">
-  <sub>Built with Claude Artifacts + a lot of coffee — Neel Nagesh Bandiwadekar</sub>
+  <sub>Built with Claude Artifacts + a lot of coffee: Neel Nagesh Bandiwadekar</sub>
 </div>
