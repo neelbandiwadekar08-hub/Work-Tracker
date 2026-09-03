@@ -4,7 +4,6 @@
 
 ### A simple work hour tracker built for working students in Germany
 
-[![Try the App](https://img.shields.io/badge/🚀%20Try%20the%20App-Live%20Demo-brightgreen?style=for-the-badge)](https://neelbandiwadekar08-hub.github.io/Work-Tracker/)
 [![View Repo](https://img.shields.io/badge/⭐%20View%20Repo-GitHub-333?style=for-the-badge&logo=github)](https://github.com/neelbandiwadekar08-hub/Work-Tracker)
 [![Built with Claude](https://img.shields.io/badge/Built%20with-Claude%20Artifacts-orange?style=for-the-badge)](https://claude.ai/public/artifacts/81428f5c-9236-4910-8a9d-f618e24c0333)
 [![LinkedIn](https://img.shields.io/badge/Connect-LinkedIn-0077B5?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/neel-nagesh-bandiwadekar/)
@@ -25,9 +24,7 @@ So I built my own. No login. No internet needed. No setup.
 
 ## 🚀 Try It Live
 
-| 👉 [Open the App](https://neelbandiwadekar08-hub.github.io/Work-Tracker/) 
-| 🧪 [Original Claude Artifact](https://claude.ai/public/artifacts/81428f5c-9236-4910-8a9d-f618e24c0333) 
-
+| 👉 [Open the App](https://worktrackerxc.netlify.app)
 ---
 
 ## ✨ What It Does
